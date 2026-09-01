@@ -1,0 +1,17 @@
+{
+  "name": "ASCII Art Generator — Conversor de Imagens em Arte ASCII",
+  "short_name": "ASCII Art",
+  "start_url": "index.php",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#22c55e",
+  "description": "Converta suas fotos e imagens em incrível arte ASCII em HTML colorido ou texto puro 100% no seu navegador.",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
