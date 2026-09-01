@@ -1,0 +1,428 @@
+/* Importa a fonte Orbitron do Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+/* Definição das Variáveis de Cor (Paleta Dracula/Neon) */
+:root {
+  --bg-start: #1a1a2e;      /* Gradiente - Início (Azul escuro) */
+  --bg-end: #16213e;        /* Gradiente - Fim (Roxo escuro) */
+  --text-color: #e0e0ff;   /* Cor de texto padrão (Lavanda claro) */
+  --neon-green: #50fa7b;   /* Verde Neon */
+  --neon-pink: #ff79c6;    /* Rosa Neon */
+  --light-purple: #bd93f9; /* Roxo Claro */
+  --light-yellow: #f1fa8c;  /* Amarelo Claro */
+  --dark-gray: #44475a;     /* Cinza Escuro (Para fundos de input, bordas sutis) */
+  --medium-gray: #6272a4;   /* Cinza Médio (Para bordas, texto secundário) */
+  --card-bg: rgba(35, 38, 59, 0.8); /* Fundo do Card (Azul/Roxo escuro semi-transparente) */
+  --border-color: var(--medium-gray); /* Cor padrão de borda */
+  --shadow-color: rgba(0, 0, 0, 0.4);    /* Sombra mais pronunciada */
+  --input-bg: var(--dark-gray);        /* Fundo de inputs */
+  --input-border: var(--medium-gray);    /* Borda de inputs */
+  --input-text: var(--text-color);     /* Texto dentro de inputs */
+  --font-primary: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Fonte padrão */
+  --font-heading: 'Orbitron', sans-serif; /* Fonte para títulos principais */
+}
+
+/* Reset básico e Box Model */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Estilos Gerais do Corpo */
+body {
+    font-family: var(--font-primary);
+    background: linear-gradient(135deg, var(--bg-start), var(--bg-end)); /* Gradiente diagonal */
+    color: var(--text-color);
+    line-height: 1.6;
+    display: flex;             /* Habilita Flexbox */
+    flex-direction: column;    /* Organiza filhos em coluna */
+    min-height: 100vh;         /* Garante altura mínima de tela */
+    padding-top: 1rem;         /* Espaço no topo para não colar na borda */
+}
+
+/* Container Principal do Conteúdo (Adaptação do .container do Bootstrap) */
+main.container {
+   flex-grow: 1; /* Faz o conteúdo principal crescer para empurrar o rodapé */
+   width: 100%;
+   max-width: 960px; /* Mantém um limite razoável para o conteúdo */
+   margin-left: auto;
+   margin-right: auto;
+   padding: 2rem 1rem; /* Espaçamento interno */
+   display: flex;
+   flex-direction: column;
+   align-items: center; /* Centraliza os cards */
+}
+
+/* Cabeçalho */
+header.site-header { /* Renomeado para evitar conflitos */
+    background-color: transparent; /* Usa o gradiente do body */
+    color: var(--text-color);
+    text-align: center;
+    padding: 1.5rem 1rem 1rem 1rem; /* Padding ajustado */
+    margin-bottom: 2rem; /* Espaço abaixo do cabeçalho */
+    width: 100%;
+    border-bottom: 1px solid var(--medium-gray); /* Linha sutil */
+}
+
+header.site-header h1 {
+    font-family: var(--font-heading); /* Fonte Orbitron */
+    font-weight: 700;
+    font-size: 2.5rem; /* Tamanho do título */
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.1); /* Leve brilho */
+}
+
+/* Estilo para os spans coloridos no título */
+header.site-header .geek {
+    color: var(--neon-green);
+}
+
+header.site-header .code {
+    color: var(--neon-pink);
+}
+
+header.site-header p.lead {
+    color: var(--light-purple); /* Cor secundária vibrante */
+    font-size: 1.1rem;
+    font-weight: 300;
+    max-width: 600px; /* Limita largura do subtítulo */
+    margin: 0 auto; /* Centraliza subtítulo */
+}
+
+/* Estilo dos Cards (Seções) */
+.card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px; /* Bordas mais arredondadas */
+    box-shadow: 0 5px 20px var(--shadow-color);
+    color: var(--text-color);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    margin-bottom: 2rem !important; /* Garante espaçamento entre cards */
+    width: 100%; /* Ocupa a largura do container */
+    max-width: 800px; /* Limita a largura máxima do card */
+}
+
+.card:hover {
+    transform: translateY(-4px); /* Efeito sutil de elevação */
+    box-shadow: 0 8px 25px var(--shadow-color);
+}
+
+.card-body {
+     padding: 2rem; /* Padding interno generoso */
+}
+
+.card-title {
+    color: var(--light-purple); /* Título do card em roxo */
+    border-bottom: 1px solid var(--dark-gray); /* Linha divisória sutil */
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem !important; /* Espaço abaixo do título */
+    font-weight: bold;
+    font-size: 1.4rem; /* Tamanho do título do card */
+}
+
+/* Formulários (Inputs, Labels, Textareas) */
+.form-label {
+    color: var(--light-purple); /* Roxo para labels */
+    margin-bottom: 0.6rem;
+    font-weight: 500;
+}
+
+.form-control,
+.form-select { /* Estilo para selects se houver */
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--input-text);
+    border-radius: 6px; /* Bordas levemente arredondadas */
+    padding: 0.75rem 1rem; /* Padding interno */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control::placeholder { /* Cor do placeholder */
+    color: var(--medium-gray);
+    opacity: 0.7;
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--input-bg);
+    color: var(--input-text);
+    border-color: var(--neon-pink); /* Destaque rosa no foco */
+    box-shadow: 0 0 0 0.25rem rgba(255, 121, 198, 0.2); /* Brilho rosa */
+    outline: none; /* Remove outline padrão */
+}
+
+/* Estilo específico para Textarea */
+textarea.form-control {
+    min-height: 120px; /* Altura mínima */
+    line-height: 1.5; /* Melhora legibilidade */
+}
+
+/* Estilo para Input de Arquivo */
+.form-control[type="file"] {
+    padding: 0.5rem 1rem; /* Ajuste padding */
+}
+
+.form-control[type="file"]::file-selector-button {
+    background-color: var(--medium-gray);
+    color: var(--text-color);
+    border: none;
+    padding: 0.65rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 1rem;
+    transition: background-color 0.2s ease;
+}
+
+.form-control[type="file"]::file-selector-button:hover {
+    background-color: var(--neon-green);
+    color: var(--bg-start); /* Texto escuro no hover do botão verde */
+}
+
+/* Estilo para Checkbox */
+.form-check-label {
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.form-check-input {
+    background-color: var(--dark-gray);
+    border: 1px solid var(--medium-gray);
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    margin-top: 0.3em; /* Alinha melhor com o label */
+}
+
+.form-check-input:checked {
+    background-color: var(--neon-green);
+    border-color: var(--neon-green);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='2' fill='%231a1a2e'/%3e%3c/svg%3e"); /* Checkbox escuro */
+}
+
+.form-check-input:focus {
+    border-color: var(--neon-pink);
+    box-shadow: 0 0 0 0.25rem rgba(255, 121, 198, 0.2);
+    outline: none;
+}
+
+/* Estilo dos Botões */
+.btn { /* Estilo base para todos os botões do Bootstrap, se houver outros */
+   transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+   border-radius: 8px; /* Bordas arredondadas padrão */
+   padding: 0.75rem 1.5rem; /* Padding padrão */
+   font-weight: bold;
+   cursor: pointer;
+}
+
+.btn:hover {
+    transform: translateY(-2px); /* Leve subida no hover */
+}
+
+.btn:active {
+   transform: translateY(0); /* Retorna à posição ao clicar */
+}
+
+/* Botão Principal (Verde Neon) */
+.btn-success { /* Classe do Bootstrap usada nos botões */
+    background-color: var(--neon-green);
+    border-color: var(--neon-green);
+    color: var(--bg-start); /* Texto escuro para contraste */
+}
+
+.btn-success:hover,
+.btn-success:focus {
+    background-color: #48e073; /* Verde um pouco mais claro */
+    border-color: #48e073;
+    color: var(--bg-start);
+    box-shadow: 0 4px 10px rgba(80, 250, 123, 0.3); /* Sombra verde neon */
+}
+
+/* Botão de Link */
+.btn-link {
+    color: var(--neon-pink); /* Rosa neon para links */
+    text-decoration: none;
+    padding: 0; /* Remove padding padrão de botão */
+    background-color: transparent;
+    border: none;
+}
+
+.btn-link:hover {
+    color: #ff9fdb; /* Rosa mais claro no hover */
+    text-decoration: underline;
+    transform: none; /* Remove efeito de subida para links */
+}
+
+/* Pré-visualização da Imagem */
+#img-preview {
+    border: 1px solid var(--border-color);
+    background-color: var(--dark-gray); /* Fundo escuro para transparências */
+    border-radius: 8px; /* Bordas arredondadas */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Área de Resultado ASCII */
+.ascii-output {
+    font-family: 'Courier New', Courier, monospace; /* Fonte monoespaçada essencial */
+    white-space: pre;                       /* Preserva espaços e quebras de linha */
+    overflow-x: auto;                     /* Adiciona rolagem horizontal se necessário */
+    font-size: 10px;                      /* Tamanho de fonte pequeno para caber mais */
+    line-height: 1;                       /* Linhas bem juntas para formar a imagem */
+    background-color: var(--input-bg);    /* Fundo igual aos inputs */
+    border: 1px solid var(--border-color);
+    border-radius: 6px;                   /* Bordas arredondadas */
+    color: var(--text-color);             /* Cor do texto padrão */
+    max-height: 600px;                    /* Altura máxima aumentada */
+    overflow-y: auto;                     /* Habilita rolagem vertical */
+    padding: 1rem;                        /* Padding interno */
+}
+
+/* Garante que spans coloridos do HTML funcionem */
+.ascii-output span {
+    display: inline-block;
+    width: 0.6em; /* Ajuste a largura se necessário */
+    text-align: center;
+    vertical-align: top; /* Ajuda no alinhamento */
+    line-height: 1;      /* Garante altura consistente */
+    /* A cor será definida inline pelo JS */
+}
+
+/* Remove fundos pretos que o JS possa gerar */
+.ascii-output span[style*="background-color: black"],
+.ascii-output div[style*="background-color: black"] {
+    background-color: transparent !important;
+}
+
+/* Linha divisória */
+hr {
+    border-color: var(--medium-gray);
+    opacity: 0.5;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* Utilitários (mantém d-none) */
+.d-none {
+    display: none !important;
+}
+
+/* Estilos do Rodapé */
+.site-footer {
+  background-color: var(--dark-gray); /* Fundo cinza escuro */
+  color: var(--medium-gray);      /* Texto cinza médio */
+  text-align: center;
+  padding: 1.5rem 1rem;           /* Padding interno */
+  margin-top: 3rem;               /* Espaço acima do rodapé */
+  font-size: 0.9rem;
+  flex-shrink: 0;                 /* Impede que o rodapé encolha */
+  border-top: 1px solid var(--border-color); /* Linha divisória no topo */
+}
+
+.footer-links a {
+  color: var(--light-purple);    /* Links em roxo */
+  text-decoration: none;
+  margin: 0 10px;                 /* Espaçamento entre links */
+  transition: color 0.3s ease, text-decoration 0.3s ease;
+}
+
+.footer-links a:hover {
+  color: var(--neon-pink);       /* Links em rosa no hover */
+  text-decoration: underline;
+}
+
+.footer-links span { /* Separador "|" */
+  margin: 0 5px;
+  color: var(--medium-gray);
+}
+
+/* Estilo para os spans GEEK CODE no rodapé */
+.footer-links .geek, .copyright .geek {
+    color: var(--neon-green);
+    font-weight: bold;
+}
+.footer-links .code, .copyright .code {
+    color: var(--neon-pink);
+    font-weight: bold;
+}
+
+.copyright {
+  margin-top: 1rem;              /* Espaço acima do copyright */
+  font-size: 0.85rem;
+}
+
+/* Responsividade */
+@media (max-width: 767px) {
+    main.container {
+        padding: 1rem 0.5rem; /* Menos padding em telas menores */
+    }
+    header.site-header h1 {
+        font-size: 2rem; /* Fonte menor no header */
+    }
+    .card-body {
+        padding: 1.5rem; /* Menos padding nos cards */
+    }
+    .form-control,
+    .btn {
+        font-size: 0.9rem; /* Fontes menores em controles */
+    }
+    .ascii-output {
+        font-size: 8px; /* Fonte ASCII ainda menor */
+        max-height: 450px; /* Altura máxima reduzida */
+    }
+    /* Garante espaçamento em colunas Bootstrap */
+    .row.g-3 > [class*="col-"] {
+        margin-bottom: 1rem;
+    }
+    /* Empilha colunas do Passo 2 se necessário antes */
+     #step2 .row > .col-lg-6 {
+         margin-bottom: 1.5rem; /* Espaço entre colunas empilhadas */
+     }
+     #step2 .row > .col-lg-6:last-child {
+         margin-bottom: 0; /* Remove espaço do último item */
+     }
+     .footer-links {
+         display: flex;
+         flex-wrap: wrap; /* Quebra linha dos links no rodapé */
+         justify-content: center;
+         gap: 5px 10px; /* Espaçamento entre links quebrados */
+     }
+     .footer-links span {
+        display: none; /* Oculta separadores em telas pequenas */
+     }
+     .footer-links a {
+        margin: 0 5px; /* Reduz margem lateral */
+     }
+}
+
+@media (max-width: 480px) {
+    header.site-header h1 {
+        font-size: 1.8rem;
+    }
+    header.site-header p.lead {
+        font-size: 1rem;
+    }
+    .card-body {
+        padding: 1rem; /* Menos padding ainda */
+    }
+    .ascii-output {
+        font-size: 7px; /* Fonte ASCII minúscula */
+         max-height: 400px;
+    }
+    .btn {
+        padding: 0.6rem 1.2rem; /* Ajuste padding botões */
+        width: 100%; /* Botões ocupam largura total */
+        margin-bottom: 0.5rem; /* Espaço entre botões empilhados */
+    }
+     .btn:last-of-type {
+        margin-bottom: 0;
+     }
+
+     /* Garante que botão de voltar fique abaixo e centralizado */
+     #step3 .float-end {
+        float: none !important;
+        display: block;
+        text-align: center;
+        margin-top: 1rem;
+     }
+}
