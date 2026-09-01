@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "ASCII Art Generator — Conversor de Imagens em Arte ASCII",
+  "short_name": "ASCII Art",
+  "version": "1.0.0",
+  "description": "Converta qualquer imagem em arte ASCII colorida em HTML ou texto puro diretamente no seu navegador.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ASCII Art Generator"
+  },
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  }
+}
