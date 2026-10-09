@@ -1,26 +1,16 @@
 /**
  * ASCII Studio 4U — Engine de Conversão de Alto Desempenho
- * 100% Client-side, Zero-lag buffer extraction & Canvas renderer
+ * 100% Client-side, Zero-lag buffer extraction & Multi-mode Canvas renderer
  */
 
 const AsciiPresets = {
-    dense: '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,"^`\'. ',
-    blocks: '█▓▒░ ',
-    matrix: '10 ',
-    braille: '⣿⣶⣤⣀ ',
-    minimal: '@%#*+=-:. ',
-    classic: '#WMBRXVYIti+=;:,. ',
-    slash: '/\\|-_+ ',
-    emoji: '⬛🟫🟪🟦🟩🟨🟧🟥⬜'
-};
-
-const AsciiThemes = {
-    monochrome: { bg: '#090d16', text: '#e2e8f0', name: 'Monocromático P&B' },
-    matrix: { bg: '#030a05', text: '#22c55e', name: 'Terminal Matrix' },
-    cyberpunk: { bg: '#0e0717', text: '#f43f5e', name: 'Cyberpunk Neon' },
-    amber: { bg: '#100b02', text: '#f59e0b', name: 'Fósforo Âmbar Retro' },
-    paper: { bg: '#f8fafc', text: '#0f172a', name: 'Papel Claro' },
-    rgb: { bg: '#090d16', text: 'rgb', name: 'HTML Colorido (RGB)' }
+    dense: ' .\'`^",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$',
+    blocks: ' ░▒▓█',
+    matrix: ' 01',
+    braille: ' ⣀⣤⣶⣿',
+    minimal: ' .:-=+*#%@',
+    classic: ' .,:;=+itYVXRBMW#',
+    slash: ' -_\\/|+'
 };
 
 class AsciiEngine {
@@ -58,15 +48,18 @@ class AsciiEngine {
     }
 
     /**
-     * Processa a imagem para ASCII Text em alta velocidade (leitura única em lote)
+     * Processa a imagem em alta performance retornando texto ASCII e matriz com suporte a todos os modos
      */
-    convertToText(imageData, options = {}) {
+    processImage(imageData, options = {}) {
         const {
             palette = AsciiPresets.dense,
             contrast = 0,
             brightness = 0,
             invert = false,
-            dither = false
+            dither = false,
+            isCustom = false,
+            customText = '',
+            isLightBg = false
         } = options;
 
         const width = imageData.width;
@@ -77,48 +70,53 @@ class AsciiEngine {
         // Fator de contraste: [-100, 100]
         const cFactor = (259 * (contrast + 255)) / (255 * (259 - contrast));
 
-        // Buffer de luminância para dithering ou mapeamento direto
+        // Buffer de luminância e cores
         const lumBuffer = new Float32Array(width * height);
+        const rgbBuffer = new Array(width * height);
 
         let ptr = 0;
-        for (let i = 0; i < lumBuffer.length; i++) {
+        for (let i = 0; i < width * height; i++) {
             let r = data[ptr];
             let g = data[ptr + 1];
             let b = data[ptr + 2];
             let a = data[ptr + 3];
             ptr += 4;
 
-            if (a < 30) {
-                lumBuffer[i] = invert ? 0 : 255;
+            if (a < 25) {
+                // Transparência total
+                lumBuffer[i] = (invert || isLightBg) ? 255 : 0;
+                rgbBuffer[i] = { r: 0, g: 0, b: 0, a: 0 };
                 continue;
             }
 
-            // Brilho
+            // Ajuste de Brilho
             if (brightness !== 0) {
                 r = Math.min(255, Math.max(0, r + brightness));
                 g = Math.min(255, Math.max(0, g + brightness));
                 b = Math.min(255, Math.max(0, b + brightness));
             }
 
-            // Contraste
+            // Ajuste de Contraste
             if (contrast !== 0) {
                 r = Math.min(255, Math.max(0, cFactor * (r - 128) + 128));
                 g = Math.min(255, Math.max(0, cFactor * (g - 128) + 128));
                 b = Math.min(255, Math.max(0, cFactor * (b - 128) + 128));
             }
 
-            // Fórmula de luminância padrão ITU-R BT.601
+            // Luminância perceptiva ITU-R BT.601
             let lum = 0.299 * r + 0.587 * g + 0.114 * b;
 
+            let finalLum = lum;
             if (invert) {
-                lum = 255 - lum;
+                finalLum = 255 - finalLum;
             }
 
-            lumBuffer[i] = lum;
+            lumBuffer[i] = finalLum;
+            rgbBuffer[i] = { r: Math.round(r), g: Math.round(g), b: Math.round(b), a };
         }
 
-        // Floyd-Steinberg Dithering em escala de cinza (se ativado)
-        if (dither) {
+        // Floyd-Steinberg Dithering em escala de cinza (se ativado e não for texto customizado)
+        if (dither && !isCustom && pLen > 1) {
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
                     const idx = y * width + x;
@@ -138,114 +136,201 @@ class AsciiEngine {
             }
         }
 
-        // Construção das linhas
-        const lines = new Array(height);
-        for (let y = 0; y < height; y++) {
-            let row = '';
-            const yOffset = y * width;
-            for (let x = 0; x < width; x++) {
-                const lum = Math.min(255, Math.max(0, lumBuffer[yOffset + x]));
-                let pIndex = Math.floor((lum / 256) * pLen);
-                if (pIndex >= pLen) pIndex = pLen - 1;
-                row += palette[pIndex];
-            }
-            lines[y] = row;
-        }
-
-        return lines.join('\n');
-    }
-
-    /**
-     * Converte para matriz com cores RGB para renderização colorida em alta velocidade
-     */
-    convertToColorMatrix(imageData, options = {}) {
-        const {
-            palette = AsciiPresets.dense,
-            contrast = 0,
-            brightness = 0,
-            invert = false,
-            customText = ''
-        } = options;
-
-        const width = imageData.width;
-        const height = imageData.height;
-        const data = imageData.data;
-        const pLen = palette.length;
-        const cFactor = (259 * (contrast + 255)) / (255 * (259 - contrast));
-
         const cleanCustomText = customText.replace(/\s/g, '');
-        const useCustomText = cleanCustomText.length > 0;
+        const hasCustomText = isCustom && cleanCustomText.length > 0;
         let charIndex = 0;
 
         const matrix = new Array(height);
-        let ptr = 0;
+        const textLines = new Array(height);
 
         for (let y = 0; y < height; y++) {
             const row = new Array(width);
+            let lineStr = '';
+            const yOffset = y * width;
+
             for (let x = 0; x < width; x++) {
-                let r = data[ptr];
-                let g = data[ptr + 1];
-                let b = data[ptr + 2];
-                let a = data[ptr + 3];
-                ptr += 4;
-
-                if (a < 30) {
-                    row[x] = { char: ' ', r: 0, g: 0, b: 0, a: 0 };
-                    continue;
-                }
-
-                if (brightness !== 0) {
-                    r = Math.min(255, Math.max(0, r + brightness));
-                    g = Math.min(255, Math.max(0, g + brightness));
-                    b = Math.min(255, Math.max(0, b + brightness));
-                }
-
-                if (contrast !== 0) {
-                    r = Math.min(255, Math.max(0, cFactor * (r - 128) + 128));
-                    g = Math.min(255, Math.max(0, cFactor * (g - 128) + 128));
-                    b = Math.min(255, Math.max(0, cFactor * (b - 128) + 128));
-                }
-
-                let lum = 0.299 * r + 0.587 * g + 0.114 * b;
-                if (invert) lum = 255 - lum;
+                const idx = yOffset + x;
+                const lum = Math.min(255, Math.max(0, lumBuffer[idx]));
+                const rgb = rgbBuffer[idx];
 
                 let char;
-                if (useCustomText) {
-                    char = cleanCustomText[charIndex % cleanCustomText.length];
-                    charIndex++;
+
+                if (hasCustomText) {
+                    // Texto Personalizado: pixels escuros (fundo) são espaços vazios para revelar o contorno
+                    const darkThreshold = 30;
+                    if (isLightBg) {
+                        if (lum > (255 - darkThreshold) || rgb.a === 0) {
+                            char = ' ';
+                        } else {
+                            char = cleanCustomText[charIndex % cleanCustomText.length];
+                            charIndex++;
+                        }
+                    } else {
+                        if (lum < darkThreshold || rgb.a === 0) {
+                            char = ' ';
+                        } else {
+                            char = cleanCustomText[charIndex % cleanCustomText.length];
+                            charIndex++;
+                        }
+                    }
                 } else {
-                    let pIdx = Math.floor((lum / 256) * pLen);
-                    if (pIdx >= pLen) pIdx = pLen - 1;
-                    char = palette[pIdx];
+                    // Paleta de densidade normal (index 0 = espaço, index final = caractere denso)
+                    if (rgb.a === 0) {
+                        char = ' ';
+                    } else {
+                        let pIndex = Math.floor((lum / 256) * pLen);
+                        if (pIndex >= pLen) pIndex = pLen - 1;
+                        char = palette[pIndex];
+                    }
                 }
 
-                row[x] = { char, r: Math.round(r), g: Math.round(g), b: Math.round(b), a };
+                row[x] = {
+                    char,
+                    r: rgb.r,
+                    g: rgb.g,
+                    b: rgb.b,
+                    lum,
+                    a: rgb.a
+                };
+                lineStr += char;
             }
+
             matrix[y] = row;
+            textLines[y] = lineStr;
         }
 
-        return matrix;
+        return {
+            text: textLines.join('\n'),
+            matrix
+        };
     }
 
     /**
-     * Gera HTML otimizado agrupando spans consecutivos da mesma cor
+     * Renderiza o ASCII em Canvas com suporte total a todos os modos (RGB, Matrix, Âmbar, Monocromático)
      */
-    generateOptimizedHTML(colorMatrix, bgColor = '#090d16') {
-        const height = colorMatrix.length;
+    renderToCanvas(targetCanvas, matrix, mode = 'monochrome', options = {}) {
+        const {
+            fontSize = 10,
+            bgColor = '#090d16'
+        } = options;
+
+        if (!matrix || matrix.length === 0) return;
+
+        const heightChars = matrix.length;
+        const widthChars = matrix[0].length;
+
+        const cellW = fontSize * 0.6;
+        const cellH = fontSize;
+        const padding = 20;
+
+        targetCanvas.width = Math.ceil(widthChars * cellW + padding * 2);
+        targetCanvas.height = Math.ceil(heightChars * cellH + padding * 2);
+
+        const ctx = targetCanvas.getContext('2d');
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
+
+        ctx.font = `bold ${fontSize}px "Courier New", Courier, monospace`;
+        ctx.textBaseline = 'top';
+
+        const isLightBg = (bgColor === '#f8fafc');
+
+        for (let y = 0; y < heightChars; y++) {
+            const row = matrix[y];
+            const yPos = padding + y * cellH;
+
+            for (let x = 0; x < widthChars; x++) {
+                const cell = row[x];
+                if (cell.char === ' ' || cell.a === 0) continue;
+
+                const xPos = padding + x * cellW;
+                const lum = cell.lum;
+
+                // Definir cor exata de acordo com o modo de renderização
+                if (mode === 'rgb') {
+                    ctx.fillStyle = `rgb(${cell.r},${cell.g},${cell.b})`;
+                } else if (mode === 'matrix') {
+                    // Verde Terminal Matrix graduado por luminância
+                    const alpha = Math.max(0.35, lum / 255);
+                    const g = Math.round(150 + (lum / 255) * 105);
+                    ctx.fillStyle = `rgba(34, ${g}, 94, ${alpha})`;
+                } else if (mode === 'amber') {
+                    // Âmbar Vintage graduado por luminância
+                    const alpha = Math.max(0.35, lum / 255);
+                    const r = Math.round(180 + (lum / 255) * 75);
+                    const g = Math.round(100 + (lum / 255) * 105);
+                    ctx.fillStyle = `rgba(${r}, ${g}, 11, ${alpha})`;
+                } else {
+                    // Monocromático (Escala de Cinza P&B)
+                    if (isLightBg) {
+                        const alpha = Math.max(0.25, (255 - lum) / 255);
+                        ctx.fillStyle = `rgba(15, 23, 42, ${alpha})`;
+                    } else {
+                        const alpha = Math.max(0.3, lum / 255);
+                        const gray = Math.round(140 + (lum / 255) * 115);
+                        ctx.fillStyle = `rgba(${gray}, ${gray}, ${gray}, ${alpha})`;
+                    }
+                }
+
+                ctx.fillText(cell.char, xPos, yPos);
+            }
+        }
+    }
+
+    /**
+     * Cria exportação de imagem PNG Ultra HD com acabamento profissional
+     */
+    exportToHDImage(matrix, mode = 'monochrome', options = {}) {
+        const hdCanvas = document.createElement('canvas');
+        this.renderToCanvas(hdCanvas, matrix, mode, {
+            ...options,
+            fontSize: 14 // Resolução expandida para impressão e compartilhamento
+        });
+
+        // Adicionar assinatura/marca discreta no rodapé
+        const ctx = hdCanvas.getContext('2d');
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText('Gerado por 4u.ia.br/app/ascii', hdCanvas.width - 15, hdCanvas.height - 8);
+
+        return hdCanvas.toDataURL('image/png');
+    }
+
+    /**
+     * Gera HTML otimizado agrupando spans consecutivos para qualquer modo
+     */
+    generateOptimizedHTML(matrix, mode = 'rgb', bgColor = '#090d16') {
+        const height = matrix.length;
         let html = `<div style="background-color:${bgColor}; font-family:'Courier New', monospace; line-height:1; font-size:10px; white-space:pre; padding:16px; border-radius:8px;">`;
 
         for (let y = 0; y < height; y++) {
-            const row = colorMatrix[y];
+            const row = matrix[y];
             let lastColor = null;
             let currentText = '';
 
             for (let x = 0; x < row.length; x++) {
                 const cell = row[x];
-                if (cell.char === ' ') {
+                if (cell.char === ' ' || cell.a === 0) {
                     currentText += ' ';
                     continue;
                 }
-                const colorStr = `rgb(${cell.r},${cell.g},${cell.b})`;
+
+                let colorStr;
+                if (mode === 'rgb') {
+                    colorStr = `rgb(${cell.r},${cell.g},${cell.b})`;
+                } else if (mode === 'matrix') {
+                    const g = Math.round(150 + (cell.lum / 255) * 105);
+                    colorStr = `rgb(34,${g},94)`;
+                } else if (mode === 'amber') {
+                    const r = Math.round(180 + (cell.lum / 255) * 75);
+                    const g = Math.round(100 + (cell.lum / 255) * 105);
+                    colorStr = `rgb(${r},${g},11)`;
+                } else {
+                    const gray = Math.round(140 + (cell.lum / 255) * 115);
+                    colorStr = `rgb(${gray},${gray},${gray})`;
+                }
+
                 if (colorStr === lastColor) {
                     currentText += cell.char;
                 } else {
@@ -271,83 +356,6 @@ class AsciiEngine {
         return html;
     }
 
-    /**
-     * Renderiza o ASCII em um Canvas alvo (alta fidelidade visual, ultra rápido, ideal para webcam e exportação HD)
-     */
-    renderToCanvas(targetCanvas, asciiData, isColor, options = {}) {
-        const {
-            theme = 'monochrome',
-            fontSize = 10,
-            bgColor = '#090d16',
-            textColor = '#22c55e'
-        } = options;
-
-        const cellW = fontSize * 0.6;
-        const cellH = fontSize;
-
-        let widthChars, heightChars;
-        if (isColor) {
-            heightChars = asciiData.length;
-            widthChars = asciiData[0].length;
-        } else {
-            const lines = asciiData.split('\n');
-            heightChars = lines.length;
-            widthChars = lines[0].length;
-        }
-
-        const padding = 20;
-        targetCanvas.width = Math.ceil(widthChars * cellW + padding * 2);
-        targetCanvas.height = Math.ceil(heightChars * cellH + padding * 2);
-
-        const ctx = targetCanvas.getContext('2d');
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
-
-        ctx.font = `bold ${fontSize}px "Courier New", Courier, monospace`;
-        ctx.textBaseline = 'top';
-
-        if (isColor) {
-            for (let y = 0; y < heightChars; y++) {
-                const row = asciiData[y];
-                const yPos = padding + y * cellH;
-                for (let x = 0; x < widthChars; x++) {
-                    const cell = row[x];
-                    if (cell.char === ' ' || cell.a === 0) continue;
-                    ctx.fillStyle = `rgb(${cell.r},${cell.g},${cell.b})`;
-                    ctx.fillText(cell.char, padding + x * cellW, yPos);
-                }
-            }
-        } else {
-            const lines = asciiData.split('\n');
-            ctx.fillStyle = textColor;
-            for (let y = 0; y < heightChars; y++) {
-                const line = lines[y];
-                const yPos = padding + y * cellH;
-                ctx.fillText(line, padding, yPos);
-            }
-        }
-    }
-
-    /**
-     * Cria exportação de imagem PNG Ultra HD com acabamento profissional e moldura
-     */
-    exportToHDImage(asciiData, isColor, options = {}) {
-        const hdCanvas = document.createElement('canvas');
-        this.renderToCanvas(hdCanvas, asciiData, isColor, {
-            ...options,
-            fontSize: 14 // Resolução expandida para impressão e compartilhamento
-        });
-
-        // Adicionar assinatura/marca discreta no rodapé
-        const ctx = hdCanvas.getContext('2d');
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.font = '11px sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText('Gerado por 4u.ia.br/app/ascii', hdCanvas.width - 15, hdCanvas.height - 8);
-
-        return hdCanvas.toDataURL('image/png');
-    }
-
     escapeHtml(str) {
         return str
             .replace(/&/g, '&amp;')
@@ -360,4 +368,3 @@ class AsciiEngine {
 
 window.AsciiEngine = AsciiEngine;
 window.AsciiPresets = AsciiPresets;
-window.AsciiThemes = AsciiThemes;

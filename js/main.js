@@ -56,8 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let webcamStream = null;
     let webcamAnimationId = null;
     let liveUpdateTimer = null;
-    let lastAsciiText = '';
-    let lastColorMatrix = null;
+    let lastResult = null; // { text, matrix }
 
     // --- Exemplos Embutidos em SVG Data URLs ---
     const SampleSvgs = {
@@ -171,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         bgThemeSelect.addEventListener('change', () => {
             applyBgTheme(bgThemeSelect.value);
-            renderCurrentOutput();
+            scheduleLiveUpdate();
         });
 
         // Webcam
@@ -180,35 +179,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Exportações
         btnCopyText.addEventListener('click', () => {
-            if (!lastAsciiText) return;
-            navigator.clipboard.writeText(lastAsciiText).then(() => {
+            if (!lastResult || !lastResult.text) return;
+            navigator.clipboard.writeText(lastResult.text).then(() => {
                 showToast('Arte ASCII copiada como texto puro!', 'success');
             }).catch(() => showToast('Erro ao copiar para a área de transferência', 'error'));
         });
 
         btnCopyHtml.addEventListener('click', () => {
-            if (!lastColorMatrix) return;
-            const html = engine.generateOptimizedHTML(lastColorMatrix, bgThemeSelect.value);
+            if (!lastResult || !lastResult.matrix) return;
+            const mode = outputModeSelect.value;
+            const html = engine.generateOptimizedHTML(lastResult.matrix, mode, bgThemeSelect.value);
             navigator.clipboard.writeText(html).then(() => {
                 showToast('Código HTML otimizado copiado!', 'success');
             }).catch(() => showToast('Erro ao copiar', 'error'));
         });
 
         btnDownloadTxt.addEventListener('click', () => {
-            if (!lastAsciiText) return;
-            downloadBlob(new Blob([lastAsciiText], { type: 'text/plain;charset=utf-8' }), 'arte-ascii-4u.txt');
+            if (!lastResult || !lastResult.text) return;
+            downloadBlob(new Blob([lastResult.text], { type: 'text/plain;charset=utf-8' }), 'arte-ascii-4u.txt');
             showToast('Arquivo .txt baixado com sucesso!', 'success');
         });
 
         btnDownloadHtml.addEventListener('click', () => {
-            if (!lastColorMatrix && !lastAsciiText) return;
+            if (!lastResult || !lastResult.matrix) return;
             const mode = outputModeSelect.value;
-            let bodyContent = '';
-            if (mode === 'rgb' && lastColorMatrix) {
-                bodyContent = engine.generateOptimizedHTML(lastColorMatrix, bgThemeSelect.value);
-            } else {
-                bodyContent = `<pre style="background:${bgThemeSelect.value}; color:#22c55e; font-family:'Courier New', monospace; line-height:1; font-size:10px; padding:20px; border-radius:10px;">${engine.escapeHtml(lastAsciiText)}</pre>`;
-            }
+            const bodyContent = engine.generateOptimizedHTML(lastResult.matrix, mode, bgThemeSelect.value);
 
             const standaloneHtml = `<!DOCTYPE html>
 <html lang="pt-br">
@@ -234,19 +229,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         btnDownloadPng.addEventListener('click', () => {
-            if (!lastColorMatrix && !lastAsciiText) return;
+            if (!lastResult || !lastResult.matrix) return;
             const mode = outputModeSelect.value;
-            const isColor = (mode === 'rgb');
-            const dataToRender = isColor ? lastColorMatrix : lastAsciiText;
-            const textColor = mode === 'matrix' ? '#22c55e' : (mode === 'amber' ? '#f59e0b' : '#e2e8f0');
 
-            const pngDataUrl = engine.exportToHDImage(dataToRender, isColor, {
-                bgColor: bgThemeSelect.value,
-                textColor: textColor
+            const pngDataUrl = engine.exportToHDImage(lastResult.matrix, mode, {
+                bgColor: bgThemeSelect.value
             });
 
             const link = document.createElement('a');
-            link.download = 'arte-ascii-ultra-hd-4u.png';
+            link.download = `arte-ascii-${mode}-4u.png`;
             link.href = pngDataUrl;
             link.click();
             showToast('Imagem PNG Ultra HD gerada e baixada!', 'success');
@@ -304,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(liveUpdateTimer);
         liveUpdateTimer = setTimeout(() => {
             triggerConversion();
-        }, 120);
+        }, 80);
     }
 
     // --- Processamento e Renderização ---
@@ -319,34 +310,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const brightness = parseInt(brightnessInput.value, 10) || 0;
         const invert = invertCheck.checked;
         const dither = ditherCheck.checked;
-        const mode = outputModeSelect.value;
-
-        let activePalette = currentPalette;
-        const customText = customTextInput.value.trim();
         const isCustom = document.querySelector('.preset-btn[data-preset="custom"]').classList.contains('active');
+        const customText = customTextInput.value.trim();
+        const isLightBg = (bgThemeSelect.value === '#f8fafc');
 
         const imageData = engine.prepareCanvas(currentImage, width, height);
 
-        if (mode === 'rgb' || isCustom) {
-            lastColorMatrix = engine.convertToColorMatrix(imageData, {
-                palette: activePalette,
-                contrast,
-                brightness,
-                invert,
-                customText: isCustom ? customText : ''
-            });
-            // Gera também versão texto correspondente para cópia rápida
-            lastAsciiText = lastColorMatrix.map(row => row.map(cell => cell.char).join('')).join('\n');
-        } else {
-            lastAsciiText = engine.convertToText(imageData, {
-                palette: activePalette,
-                contrast,
-                brightness,
-                invert,
-                dither
-            });
-            lastColorMatrix = null;
-        }
+        lastResult = engine.processImage(imageData, {
+            palette: currentPalette,
+            contrast,
+            brightness,
+            invert,
+            dither,
+            isCustom,
+            customText,
+            isLightBg
+        });
 
         const endTime = performance.now();
         const duration = (endTime - startTime).toFixed(1);
@@ -359,26 +338,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderCurrentOutput() {
+        if (!lastResult || !lastResult.matrix) return;
+
         const mode = outputModeSelect.value;
         const fontSize = parseInt(fontSizeSelect.value, 10) || 10;
         const bgColor = bgThemeSelect.value;
 
-        const isColor = (mode === 'rgb');
-        const dataToRender = isColor ? lastColorMatrix : lastAsciiText;
-        if (!dataToRender) return;
-
-        const textColor = mode === 'matrix' ? '#22c55e' : (mode === 'amber' ? '#f59e0b' : '#e2e8f0');
-
-        engine.renderToCanvas(previewCanvas, dataToRender, isColor, {
+        engine.renderToCanvas(previewCanvas, lastResult.matrix, mode, {
             fontSize,
-            bgColor,
-            textColor
+            bgColor
         });
 
         // Atualizar bloco oculto de texto puro para seleção fácil
-        asciiTextOutput.textContent = lastAsciiText;
-        asciiTextOutput.style.backgroundColor = bgColor;
-        asciiTextOutput.style.color = textColor;
+        asciiTextOutput.textContent = lastResult.text;
     }
 
     function applyBgTheme(bgColor) {
@@ -455,7 +427,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function captureWebcamSnapshot() {
         if (!isWebcamActive || !webcamVideo) return;
 
-        // Congelar o frame capturado
         const snapCanvas = document.createElement('canvas');
         snapCanvas.width = webcamVideo.videoWidth;
         snapCanvas.height = webcamVideo.videoHeight;

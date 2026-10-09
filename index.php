@@ -2,7 +2,7 @@
 header("Cache-Control: no-cache, no-store, must-revalidate");
 header("Pragma: no-cache");
 header("Expires: 0");
-$assetVersion = '2.0.0';
+$assetVersion = '2.0.1';
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
