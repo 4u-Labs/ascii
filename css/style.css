@@ -310,6 +310,55 @@ body {
     outline: none;
 }
 
+/* ==========================================================================
+   Seletor Principal de Modo de Renderização (Permanentemente Aceso & Neon)
+   ========================================================================== */
+#outputMode, .studio-select-highlight {
+    background-color: rgba(6, 24, 44, 0.9) !important;
+    border: 2px solid #38bdf8 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 0.96rem !important;
+    padding: 12px 56px 12px 16px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.5), inset 0 0 10px rgba(56, 189, 248, 0.12) !important;
+    cursor: pointer !important;
+    /* Ícone dropdown permanentemente aceso como botão neon interativo */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3e%3crect x='2' y='2' width='32' height='32' rx='8' fill='%230284c7' fill-opacity='0.35' stroke='%2338bdf8' stroke-width='2'/%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3.2' d='m11 15 7 7 7-7'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 12px center !important;
+    background-size: 32px 32px !important;
+    transition: all 0.25s ease !important;
+    animation: pulseSelectGlow 3.5s ease-in-out infinite;
+}
+
+@keyframes pulseSelectGlow {
+    0%, 100% {
+        border-color: #38bdf8;
+        box-shadow: 0 0 16px rgba(56, 189, 248, 0.45), inset 0 0 10px rgba(56, 189, 248, 0.1);
+    }
+    50% {
+        border-color: #22c55e;
+        box-shadow: 0 0 24px rgba(34, 197, 94, 0.65), 0 0 4px #22c55e, inset 0 0 14px rgba(34, 197, 94, 0.2);
+    }
+}
+
+#outputMode:hover, .studio-select-highlight:hover {
+    background-color: rgba(9, 32, 60, 0.98) !important;
+    border-color: #ffffff !important;
+    box-shadow: 0 0 30px rgba(56, 189, 248, 0.85), inset 0 0 16px rgba(56, 189, 248, 0.25) !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3e%3crect x='2' y='2' width='32' height='32' rx='8' fill='%2338bdf8' fill-opacity='0.55' stroke='%23ffffff' stroke-width='2.2'/%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3.6' d='m11 15 7 7 7-7'/%3e%3c/svg%3e") !important;
+    transform: translateY(-1px);
+}
+
+#outputMode:focus, .studio-select-highlight:focus {
+    background-color: #071322 !important;
+    border-color: #38bdf8 !important;
+    outline: none !important;
+    box-shadow: 0 0 32px rgba(56, 189, 248, 0.9), inset 0 0 18px rgba(56, 189, 248, 0.3) !important;
+    animation: none;
+}
+
 .form-range {
     accent-color: var(--neon-cyan);
     height: 6px;

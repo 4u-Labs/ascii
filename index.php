@@ -2,7 +2,7 @@
 header("Cache-Control: no-cache, no-store, must-revalidate");
 header("Pragma: no-cache");
 header("Expires: 0");
-$assetVersion = '2.0.1';
+$assetVersion = '2.0.2';
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -178,17 +178,20 @@ $assetVersion = '2.0.1';
                         <span>3. Calibração &amp; Resolução</span>
                     </div>
                     <div class="card-body-styled">
-                        <!-- Modo de Cor -->
-                        <div class="mb-3">
-                            <label for="outputMode" class="form-label small d-flex justify-content-between">
-                                <span>Modo de Renderização:</span>
+                        <!-- Modo de Cor (Permanentemente Aceso) -->
+                        <div class="mb-4">
+                            <label for="outputMode" class="form-label small d-flex justify-content-between align-items-center mb-2">
+                                <span><i class="fas fa-palette text-neon-cyan me-1"></i><strong>Modo de Renderização:</strong></span>
+                                <span class="badge bg-primary-subtle text-neon-cyan border border-info-subtle px-2.5 py-1 rounded-pill" id="badgeModeActive">⚪ Monocromático</span>
                             </label>
-                            <select id="outputMode" class="form-select">
-                                <option value="monochrome" selected>⚪ Monocromático (Escala de Cinza P&amp;B)</option>
-                                <option value="rgb">🌈 HTML Colorido Fiel (Cores Originais RGB)</option>
-                                <option value="matrix">🟢 Terminal Hacker (Verde Fosforescente Matrix)</option>
-                                <option value="amber">🟠 Terminal Vintage (Fósforo Âmbar Retro)</option>
-                            </select>
+                            <div class="position-relative">
+                                <select id="outputMode" class="form-select studio-select-highlight">
+                                    <option value="monochrome" selected>⚪ Monocromático (Escala de Cinza P&amp;B)</option>
+                                    <option value="rgb">🌈 HTML Colorido Fiel (Cores Originais RGB)</option>
+                                    <option value="matrix">🟢 Terminal Hacker (Verde Fosforescente Matrix)</option>
+                                    <option value="amber">🟠 Terminal Vintage (Fósforo Âmbar Retro)</option>
+                                </select>
+                            </div>
                         </div>
 
                         <!-- Largura e Altura -->

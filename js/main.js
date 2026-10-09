@@ -143,7 +143,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         invertCheck.addEventListener('change', scheduleLiveUpdate);
         ditherCheck.addEventListener('change', scheduleLiveUpdate);
-        outputModeSelect.addEventListener('change', scheduleLiveUpdate);
+        outputModeSelect.addEventListener('change', () => {
+            const badge = document.getElementById('badgeModeActive');
+            if (badge) {
+                const labels = {
+                    monochrome: '⚪ Monocromático',
+                    rgb: '🌈 HTML Colorido',
+                    matrix: '🟢 Terminal Matrix',
+                    amber: '🟠 Terminal Âmbar'
+                };
+                badge.textContent = labels[outputModeSelect.value] || outputModeSelect.value;
+            }
+            scheduleLiveUpdate();
+        });
         customTextInput.addEventListener('input', scheduleLiveUpdate);
 
         // Presets de Paleta
